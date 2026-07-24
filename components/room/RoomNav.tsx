@@ -1,0 +1,65 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRooms } from "@/hooks/useRooms";
+
+export default function RoomNav() {
+  const pathname = usePathname();
+  const { data: rooms } = useRooms();
+
+  if (!rooms) return <aside className="p-6">데이터 없음</aside>;
+
+  // 부모(카테고리) : depth = 0
+  const parents = rooms.filter((room) => room.depth === 0);
+
+  // 자식 : depth = 1 → parent_name 으로 그룹화
+  const childrenMap = rooms.reduce((acc: Record<string, typeof rooms>, room) => {
+    if (room.depth === 1) {
+      if (!acc[room.parent_name]) acc[room.parent_name] = [];
+      acc[room.parent_name].push(room);
+    }
+    return acc;
+  }, {});
+
+  return (
+    <aside
+      className="
+        bg-[#f4ecd4] border-b md:border-r
+        top-0 left-0 z-40
+        w-full md:w-64
+        px-4 md:px-6
+        py-3 md:py-10"
+    >
+      <h2 className="text-xl font-serif mb-4">객실</h2>
+
+      {/* 부모 카테고리 반복 */}
+      {parents.map((parent) => (
+        <div key={parent.room_no} className="mb-6">
+          {/* 카테고리 이름 */}
+          <h3 className="font-semibold text-[#6d563b] mb-2">
+            {parent.room_name}
+          </h3>
+
+          {/* 자식 목록 */}
+          <ul className="space-y-1">
+            {childrenMap[parent.room_no]?.map((child) => (
+              <li key={child.room_no}>
+                <Link
+                  href={`/rooms/${child.room_no}`}
+                  className={`block px-2 py-1 rounded ${
+                    pathname.includes(String(child.room_no))
+                      ? "bg-[#ede4cb] text-[#6d563b]"
+                      : "text-gray-700 hover:bg-[#ede4cb]"
+                  }`}
+                >
+                  {child.room_name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </aside>
+  );
+}

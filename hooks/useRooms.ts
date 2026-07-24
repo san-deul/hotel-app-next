@@ -1,25 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchRooms, getRoomImageUrl, RoomRow } from "@/lib/api/roomApi";
-import { CarouselItem } from "@/components/common/CarouselSection";
+import { fetchRooms, RoomRow } from "@/lib/api/roomApi";
 
+// RoomNav(부모/자식 카테고리 트리)에서 쓰는 원본(raw) 데이터.
+// depth===0(부모)도 포함, 필드 가공 없음.
+// 카러셀용으로 가공된 데이터가 필요하면 useRoomsCarousel을 쓰세요.
 export const useRooms = () => {
-  return useQuery({
+  return useQuery<RoomRow[]>({
     queryKey: ["rooms"],
     queryFn: fetchRooms,
-    select: (rooms: RoomRow[]): CarouselItem[] =>
-      rooms
-        .filter((room) => room.depth !== 0)
-        .map((room) => {
-          const mainImg = room.room_img?.find((img) => img.is_main);
-          const imagePath = mainImg?.upload_path;
-
-          return {
-            id: room.room_no,
-            title: room.room_name,
-            image: imagePath
-              ? getRoomImageUrl(imagePath)
-              : "/images/no-image.jpg",
-          };
-        }),
   });
 };
