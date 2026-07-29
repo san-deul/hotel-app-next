@@ -9,6 +9,7 @@ export default function RoomNav() {
   const { data: rooms } = useRooms();
 
   if (!rooms) return <aside className="p-6">데이터 없음</aside>;
+  //console.log("rooms raw data:", rooms);
 
   // 부모(카테고리) : depth = 0
   const parents = rooms.filter((room) => room.depth === 0);
@@ -16,8 +17,8 @@ export default function RoomNav() {
   // 자식 : depth = 1 → parent_name 으로 그룹화
   const childrenMap = rooms.reduce((acc: Record<string, typeof rooms>, room) => {
     if (room.depth === 1) {
-      if (!acc[room.parent_name]) acc[room.parent_name] = [];
-      acc[room.parent_name].push(room);
+      if (!acc[room.parent_no]) acc[room.parent_no] = [];
+      acc[room.parent_no].push(room);
     }
     return acc;
   }, {});

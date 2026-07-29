@@ -5,84 +5,19 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useFavorite } from "@/hooks/useFavorite";
+import { useRoom, useRooms } from "@/hooks/useRooms";
+import { getRoomImageUrl } from "@/lib/api/roomApi";
 
-const supabase = createClient();
-
-interface RoomRow {
-  room_no: string | number;
-  room_name: string;
-  info?: string;
-  price?: number;
-  guest_count?: number;
-  [key: string]: unknown;
-}
-
-interface RoomImageRow {
-  room_img_no: string | number;
-  room_no: string | number;
-  upload_path: string;
-  publicUrl: string;
-  [key: string]: unknown;
-}
 
 export default function RoomDetailContent({ id }: { id: string }) {
-  const router = useRouter();
 
-  const [room, setRoom] = useState<RoomRow | null>(null);
-  const [images, setImages] = useState<RoomImageRow[]>([]);
-  const [mainIndex, setMainIndex] = useState(0);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const router = useRouter();
   const roomNo = Number(id);
 
+  const { data: room, isLoading, error } = useRoom(id);
+  const [mainIndex, setMainIndex] = useState(0);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: roomData, error: roomError } = await supabase
-        .from("room")
-        .select("*")
-        .eq("room_no", id)
-        .maybeSingle();
-
-      if (roomError) {
-        console.error("room fetch error:", roomError);
-        setLoadError(roomError.message);
-        return;
-      }
-
-      if (!roomData) {
-        console.error("room not found for room_no:", id);
-        setLoadError(`room_no=${id} 에 해당하는 객실을 찾지 못했습니다.`);
-        return;
-      }
-
-      const { data: imgs, error: imgError } = await supabase
-        .from("room_img")
-        .select("*")
-        .eq("room_no", id);
-
-      if (imgError) {
-        console.error("room_img fetch error:", imgError);
-      }
-
-      setRoom(roomData as RoomRow);
-
-      if (imgs && imgs.length > 0) {
-        const imageUrls = imgs.map((img) => {
-          const { data } = supabase.storage
-            .from("room_images")
-            .getPublicUrl(img.upload_path);
-          return {
-            ...img,
-            publicUrl: data.publicUrl,
-          };
-        });
-
-        setImages(imageUrls as RoomImageRow[]);
-      }
-    };
-
-    load();
-  }, [id]);
+  const images = room?.room_img ?? [];
 
   const {
     isFavorite,
@@ -91,14 +26,16 @@ export default function RoomDetailContent({ id }: { id: string }) {
     isToggling,
   } = useFavorite(roomNo);
 
-  if (loadError)
+  if (error)
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-xl text-red-500">{loadError}</div>
+        <div className="text-xl text-red-500">
+          {error instanceof Error ? error.message : "객실을 불러오지 못했습니다."}
+        </div>
       </div>
     );
 
-  if (!room)
+  if (isLoading || !room)
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-xl text-gray-500">Loading...</div>
@@ -121,12 +58,12 @@ export default function RoomDetailContent({ id }: { id: string }) {
       {/* 메인 이미지 + 좌우 화살표 */}
       <div className="relative w-full h-[450px]">
         <img
-          src={images[mainIndex]?.publicUrl}
+          src={getRoomImageUrl(images[mainIndex]?.upload_path)}
           alt={room.room_name}
           className="w-full h-full object-cover rounded"
         />
 
-        {/* 왼쪽 버튼 */}
+        {/* 왼쪽 버튼 */} 
         {images.length > 1 && (
           <button
             onClick={showPrev}
@@ -153,7 +90,7 @@ export default function RoomDetailContent({ id }: { id: string }) {
           {images.map((img, index) => (
             <img
               key={img.room_img_no}
-              src={img.publicUrl}
+              src={getRoomImageUrl(img.upload_path)}
               alt={`${room.room_name} 썸네일 ${index + 1}`}
               onClick={() => setMainIndex(index)}
               className={`w-32 h-20 object-cover rounded cursor-pointer border-2 transition ${
@@ -197,7 +134,7 @@ export default function RoomDetailContent({ id }: { id: string }) {
             예약하기
           </button>
           <button
-            onClick={toggleFavorite}
+            onClick={() => toggleFavorite()}
             disabled={favoriteLoading || isToggling}
             className={`px-6 py-3 rounded transition text-lg
                 ${
