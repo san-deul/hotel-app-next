@@ -19,14 +19,19 @@ export default function Header() {
   const pathname = usePathname();
 
   // Header 상태 (모바일, 스크롤)
-  const { open, setOpen, isScrolled, setIsScrolled, isHovered, setIsHovered } =
-    useHeaderStore();
+
+  const open = useHeaderStore((state) => state.open);
+  const setOpen = useHeaderStore((state) => state.setOpen);
+  const isScrolled = useHeaderStore((state) => state.isScrolled);
+  const setIsScrolled = useHeaderStore((state) => state.setIsScrolled);
+  const isHovered = useHeaderStore((state) => state.isHovered);
+  const setIsHovered = useHeaderStore((state) => state.setIsHovered);
 
   // 로그인 상태
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  const isActive = (to: string) => pathname.startsWith(to);
+  const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
 
   // 스크롤 감지
   useEffect(() => {
@@ -53,6 +58,21 @@ export default function Header() {
     return () => window.removeEventListener("resize", handleResize);
   }, [setOpen]);
 
+  //
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [open, setOpen]);
+
   const headerClass = clsx(
     "fixed top-0 left-0 w-full z-50 transition-colors duration-300",
 
@@ -60,11 +80,41 @@ export default function Header() {
     pathname !== "/"
       ? "bg-black text-white border-b border-gray-700"
       : // 메인 페이지
-        isScrolled
+      isScrolled
         ? "bg-black text-white border-b border-gray-700"
         : isHovered
           ? "bg-black text-white"
           : "bg-transparent text-white"
+  );
+
+  type NavItem =
+    | { type: "link"; label: string; to: string; show?: () => boolean }
+    | { type: "button"; label: string; onClick: () => void; show?: () => boolean };
+
+  const rightNavItems: NavItem[] = user
+    ? [
+      { type: "link", label: "마이페이지", to: "/mypage" },
+      { type: "button", label: "로그아웃", onClick: logout },
+      {
+        type: "link",
+        label: "관리자",
+        to: "/admin",
+        show: () => user.role === "admin" || user.role === "manager",
+      },
+      {
+        type: "link",
+        label: "예약확인",
+        to: "/myReservation",
+        show: () => user.role === "user",
+      },
+    ]
+    : [
+      { type: "link", label: "로그인", to: "/login" },
+      { type: "link", label: "회원가입", to: "/signup" },
+    ];
+
+  const visibleRightNavItems = rightNavItems.filter(
+    (item) => !item.show || item.show()
   );
 
   return (
@@ -98,43 +148,22 @@ export default function Header() {
 
           {/* RIGHT NAV (데스크탑) */}
           <nav className="hidden md:flex items-center gap-4 text-sm">
-            {!user && (
-              <>
-                <Link href="/login" className="hover:text-[#9c836a]">
-                  로그인
-                </Link>
-                <span className="text-gray-500">|</span>
-
-                <Link href="/signup" className="hover:text-[#9c836a]">
-                  회원가입
-                </Link>
-                <span className="text-gray-500">|</span>
-              </>
-            )}
-
-            {user && (
-              <>
-                <Link href="/mypage" className="hover:text-[#9c836a]">
-                  마이페이지
-                </Link>
-                <span className="text-gray-500">|</span>
-
-                <button onClick={logout} className="hover:text-[#9c836a]">
-                  로그아웃
-                </button>
-                <span className="text-gray-500">|</span>
-                {(user.role === "admin" || user.role === "manager") && (
-                  <Link href="/admin" className="hover:text-[#9c836a]">
-                    관리자
+            {visibleRightNavItems.map((item, i) => (
+              <span key={item.label} className="flex items-center gap-4">
+                {item.type === "link" ? (
+                  <Link href={item.to} className="hover:text-[#9c836a]">
+                    {item.label}
                   </Link>
+                ) : (
+                  <button onClick={item.onClick} className="hover:text-[#9c836a]">
+                    {item.label}
+                  </button>
                 )}
-                {user.role === "user" && (
-                  <Link href="/myReservation" className="hover:text-[#9c836a]">
-                    예약확인
-                  </Link>
+                {i < visibleRightNavItems.length - 1 && (
+                  <span className="text-gray-500">|</span>
                 )}
-              </>
-            )}
+              </span>
+            ))}
           </nav>
 
           {/* MOBILE BUTTON */}
@@ -188,54 +217,28 @@ export default function Header() {
 
           {/* RIGHT NAV (모바일) */}
           <div className="mt-6 flex flex-col gap-3 text-sm">
-            {!user && (
-              <>
+            {visibleRightNavItems.map((item) =>
+              item.type === "link" ? (
                 <Link
-                  href="/login"
+                  key={item.label}
+                  href={item.to}
                   className="text-gray-700"
                   onClick={() => setOpen(false)}
                 >
-                  로그인
+                  {item.label}
                 </Link>
-
-                <Link
-                  href="/signup"
-                  className="text-gray-700"
-                  onClick={() => setOpen(false)}
+              ) : (
+                <button
+                  key={item.label}
+                  className="text-left text-gray-700"
+                  onClick={() => {
+                    item.onClick();
+                    setOpen(false);
+                  }}
                 >
-                  회원가입
-                </Link>
-              </>
-            )}
-
-            {user && (
-              <>
-                <Link
-                  href="/mypage"
-                  className="text-gray-700"
-                  onClick={() => setOpen(false)}
-                >
-                  마이페이지
-                </Link>
-
-                <button className="text-left text-gray-700" onClick={logout}>
-                  로그아웃
+                  {item.label}
                 </button>
-
-                {(user.role === "admin" || user.role === "manager") && (
-                  <Link href="/admin" className="hover:text-[#9c836a]">
-                    관리자
-                  </Link>
-                )}
-                {user.role === "user" && (
-                  <Link
-                    href="/myReservation"
-                    className="hover:text-[#9c836a]"
-                  >
-                    예약확인
-                  </Link>
-                )}
-              </>
+              )
             )}
           </div>
         </div>
