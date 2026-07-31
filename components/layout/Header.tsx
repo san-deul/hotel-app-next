@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useHeaderStore } from "@/lib/store/headerStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import clsx from "clsx";
+import { toast } from "sonner";
 // clsx: 조건부로 css클래스명 합치는 데 사용하는 경량 js라이브러리
 
 const MAIN_NAV = [
@@ -89,7 +90,7 @@ export default function Header() {
 
   type NavItem =
     | { type: "link"; label: string; to: string; show?: () => boolean }
-    | { type: "button"; label: string; onClick: () => void; show?: () => boolean };
+    | { type: "button"; label: string; onClick: () => void | Promise<void>; show?: () => boolean };
 
   const rightNavItems: NavItem[] = user
     ? [
@@ -155,7 +156,20 @@ export default function Header() {
                     {item.label}
                   </Link>
                 ) : (
-                  <button onClick={item.onClick} className="hover:text-[#9c836a]">
+                  <button
+                    key={item.label}
+                    className="hover:text-[#9c836a]"
+                    onClick={async () => {
+                      try {
+                        await item.onClick();
+                        toast.success("로그아웃되었습니다.");
+                        setOpen(false);
+                      } catch (error) {
+                        console.error('로그아웃 실패', error)
+                        toast.error("로그아웃에 실패했습니다. 다시 시도해주세요.");
+                      }
+                    }}
+                  >
                     {item.label}
                   </button>
                 )}
@@ -231,9 +245,15 @@ export default function Header() {
                 <button
                   key={item.label}
                   className="text-left text-gray-700"
-                  onClick={() => {
-                    item.onClick();
-                    setOpen(false);
+                  onClick={async () => {
+                    try {
+                      await item.onClick();
+                      toast.success("로그아웃되었습니다.");
+                      setOpen(false);
+                    } catch (error) {
+                      console.error('로그아웃 실패', error)
+                      toast.error("로그아웃에 실패했습니다. 다시 시도해주세요.");
+                    }
                   }}
                 >
                   {item.label}

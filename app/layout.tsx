@@ -5,6 +5,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Providers from "@/providers/Providers";
 import AppShell from "@/components/layout/AppShell";
+import { Toaster } from "sonner";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +38,7 @@ export default function RootLayout({
           <AppShell>
             
             {children}
-           
+            <Toaster position="top-center" richColors />
           </AppShell>
         </Providers>
       </body>

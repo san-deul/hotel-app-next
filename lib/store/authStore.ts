@@ -59,7 +59,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     const supabase = createClient()
-    await supabase.auth.signOut()
-    set({ user: null, isLoading: false })
+    try {
+      const { error } = await supabase.auth.signOut()
+      if(error){
+        console.error('로그아웃 실패',error)
+        throw error
+      }
+      set({ user: null, isLoading: false })
+    } catch (err) {
+      console.error('로그아웃 처리 중 에러:', err)
+      throw err
+    }
+
+
   },
 }))
