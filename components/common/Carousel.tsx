@@ -15,6 +15,7 @@ import "swiper/css/navigation";
 
 // css
 import "@/styles/swiper-mainvisual.css";
+import Image from "next/image";
 
 interface CarouselImage {
   id: number;
@@ -38,10 +39,13 @@ export default function Carousel({ images }: CarouselProps) {
     >
       {images.map((img) => (
         <SwiperSlide key={img.id}>
-          <img
+          <Image
             src={img.image_url}
             alt={`메인 비주얼 ${img.id}`}
-            className="w-full h-full object-cover"
+            fill
+            sizes="100vw"
+            priority={img.id === 1}  // 첫 슬라이드만 우선 로드
+            className="object-cover"
           />
         </SwiperSlide>
       ))}

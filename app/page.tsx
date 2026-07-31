@@ -2,7 +2,14 @@ import MainFacilities from "@/components/main/MainFacilities";
 import MainRooms from "@/components/main/MainRooms";
 import MainVisual from "@/components/main/MainVisual";
 import ReservationBar from "@/components/reservation/ReserveationBar";
-import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SD HOTEL 프로젝트",
+  description: "SD HOTEL 프로젝트",
+
+};
+
 
 export default function Home() {
   return (
