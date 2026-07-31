@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
-const supabase = createClient();
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface RoomImage {
   room_img_no: string | number;
@@ -20,7 +19,7 @@ export interface RoomRow {
   [key: string]: unknown;
 }
 
-export const getRoomImageUrl = (path?: string) => {
+export const getRoomImageUrl = (supabase: SupabaseClient, path?: string) => {
   if (!path) return "/images/no-image.jpg";
 
   const { data } = supabase.storage.from("room_images").getPublicUrl(path);
@@ -28,7 +27,9 @@ export const getRoomImageUrl = (path?: string) => {
   return data.publicUrl;
 };
 
-export const fetchRooms = async (): Promise<RoomRow[]> => {
+export const fetchRooms = async (
+  supabase: SupabaseClient
+): Promise<RoomRow[]> => {
   const { data, error } = await supabase
     .from("room")
     .select(`*,room_img(*)`)
@@ -38,9 +39,10 @@ export const fetchRooms = async (): Promise<RoomRow[]> => {
   return data as RoomRow[];
 };
 
-// room 단건 조회 ((RoomDetailContnet))
-
-export const fetchRoomById = async (roomNo: string): Promise<RoomRow | null> => {
+export const fetchRoomById = async (
+  supabase: SupabaseClient,
+  roomNo: string
+): Promise<RoomRow | null> => {
   const { data, error } = await supabase
     .from("room")
     .select(`*, room_img(*)`)

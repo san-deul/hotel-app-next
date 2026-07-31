@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { DateRange, Range, RangeKeyDict } from "react-date-range";
-import { differenceInDays } from "date-fns";
+import { DateRange, RangeKeyDict } from "react-date-range";
+import { differenceInDays, format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { ko } from "date-fns/locale";
@@ -104,7 +104,7 @@ export default function ReservationBar() {
           >
             <span className="text-sm text-gray-500">체크인 / 체크아웃</span>
             <div className="font-semibold text-gray-800 text-base md:text-lg mt-1">
-              {startDate.toLocaleDateString()} – {endDate.toLocaleDateString()}
+              {format(startDate, "yyyy.MM.dd")} – {format(endDate, "yyyy.MM.dd")}
             </div>
             <div className="text-sm text-gray-500 mt-1">
               {nights}박 {nights + 1}일
@@ -165,11 +165,15 @@ export default function ReservationBar() {
               <div className="flex justify-between items-center py-3 border-b">
                 <p className="font-medium">성인</p>
                 <div className="flex gap-4 items-center">
-                  <button onClick={() => setAdult(Math.max(1, adult - 1))}>
+                  <button
+                    aria-label="성인 인원 감소"
+                    onClick={() => setAdult(Math.max(1, adult - 1))}>
                     –
                   </button>
                   <span>{adult}</span>
-                  <button onClick={() => setAdult(adult + 1)}>+</button>
+                  <button
+                    aria-label="성인 인원 증가"
+                    onClick={() => setAdult(adult + 1)}>+</button>
                 </div>
               </div>
 
@@ -177,11 +181,11 @@ export default function ReservationBar() {
               <div className="flex justify-between items-center py-3">
                 <p className="font-medium">어린이</p>
                 <div className="flex gap-4 items-center">
-                  <button onClick={() => setChild(Math.max(0, child - 1))}>
+                  <button aria-label="어린이 인원 감소" onClick={() => setChild(Math.max(0, child - 1))}>
                     –
                   </button>
                   <span>{child}</span>
-                  <button onClick={() => setChild(child + 1)}>+</button>
+                  <button aria-label="어린이 인원 증가" onClick={() => setChild(child + 1)}>+</button>
                 </div>
               </div>
 
@@ -205,10 +209,13 @@ export default function ReservationBar() {
             hover:bg-[#a67c52]
             transition
           "
-          onClick={() =>
+          onClick={() => {
+            setOpenCalendar(false); 
+            setOpenGuests(false);   
             router.push(
               `/reserve/search?start=${start}&end=${end}&adult=${adult}&child=${child}`
             )
+          }
           }
         >
           검색

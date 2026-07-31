@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "@/styles/swiper-mainsection.css";
 import Link from "next/link";
+import Image from "next/image";
 
 export interface CarouselItem {
   id: string | number;
@@ -44,9 +45,11 @@ export default function CarouselSection({ title, items }: CarouselSectionProps) 
             <div className="relative w-full h-full ">
               <Link href={`/rooms/${item.id}`}>
                 {/* 이미지 */}
-                <img
+                <Image
                   src={item.image}
                   alt={item.title}
+                  width={400}
+                  height={320}
                   className="w-full h-80 object-cover rounded-lg"
                 />
 
