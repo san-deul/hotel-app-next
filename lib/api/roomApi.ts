@@ -19,6 +19,13 @@ export interface RoomRow {
   [key: string]: unknown;
 }
 
+/* 메인 페이지용 */
+export interface MainRoomCarouselItem {
+  id: string | number;
+  title: string;
+  image: string;
+}
+
 export const getRoomImageUrl = (supabase: SupabaseClient, path?: string) => {
   if (!path) return "/images/no-image.jpg";
 
@@ -51,4 +58,26 @@ export const fetchRoomById = async (
 
   if (error) throw error;
   return data as RoomRow | null;
+};
+
+/* 메인 페이지용 */
+export const fetchRoomsForMain = async (
+  supabase: SupabaseClient
+): Promise<MainRoomCarouselItem[]> => {
+  const { data, error } = await supabase
+    .from("room")
+    .select(`*, room_img(*)`)
+    .neq("depth", 0)
+    .order("room_no", { ascending: true });
+
+  if (error) throw error;
+
+  return (data as RoomRow[]).map((room) => {
+    const mainImagePath = room.room_img?.find((img) => img.is_main)?.upload_path;
+    return {
+      id: room.room_no,
+      title: room.room_name,
+      image: getRoomImageUrl(supabase, mainImagePath),
+    };
+  });
 };

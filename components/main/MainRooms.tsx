@@ -1,24 +1,22 @@
 import CarouselSection from "@/components/common/CarouselSection";
-import { useRooms } from "@/hooks/useRooms";
-import { fetchRooms } from "@/lib/api/roomApi";
+import { fetchRoomsForMain, MainRoomCarouselItem } from "@/lib/api/roomApi";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MainRooms() {
   const supabase = await createClient();
-  const rooms = await fetchRooms(supabase);
 
-  const items = rooms.map((room) => ({
-    id: room.room_no,
-    title: room.room_name,
-    image:
-      room.room_img?.find((img) => img.is_main)?.upload_path
-        ? supabase.storage
-          .from("room_images")
-          .getPublicUrl(
-            room.room_img.find((img) => img.is_main)!.upload_path
-          ).data.publicUrl
-        : "/images/no-image.jpg",
-  }));
+  let items: MainRoomCarouselItem[] = [];
+
+  try {
+    items = await fetchRoomsForMain(supabase);
+  } catch (e) {
+    console.error("메인페이지 객실 목록 조회 실패:", e);
+    return (
+      <div className="w-full py-16 text-center text-gray-500">
+        객실 정보를 불러오지 못했습니다.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

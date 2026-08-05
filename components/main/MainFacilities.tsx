@@ -1,67 +1,27 @@
-"use client";
+import { createClient } from "@/lib/supabase/server";
 
-import { useQuery } from "@tanstack/react-query";
 import CarouselSection from "@/components/common/CarouselSection";
-import { createClient } from "@/lib/supabase/client";
+import { fetchFacilitiesForMain, MainFacilityCarouselItem } from "@/lib/api/facilities";
 
-const supabase = createClient();
+export default async function MainFacilities() {
+  const supabase = await createClient();
 
-interface FacilityImage {
-  upload_path: string;
-  is_main: boolean;
-}
+  let items: MainFacilityCarouselItem[] = [];
 
-interface FacilityRow {
-  id: number;
-  name: string;
-  facility_img: FacilityImage[] | null;
-}
-
-export default function MainFacilities() {
-  const getFacilityImage = (path?: string) => {
-    if (!path) return "/images/no-image.jpg";
-
-    const { data } = supabase.storage.from("facility_images").getPublicUrl(path);
-
-    return data.publicUrl;
-  };
-
-  const { data: facilities = [] } = useQuery({
-    queryKey: ["facility-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("facilities")
-        .select(
-          `
-          id,
-          name,
-          facility_img (
-            upload_path,
-            is_main
-          )
-        `
-        )
-        .order("id");
-
-      if (error) throw error;
-
-      return (data as FacilityRow[]).map((facility) => {
-        const mainImg = facility.facility_img?.find((img) => img.is_main);
-
-        return {
-          id: facility.id,
-          title: facility.name,
-          image: mainImg
-            ? getFacilityImage(mainImg.upload_path)
-            : "/images/no-image.jpg",
-        };
-      });
-    },
-  });
+  try {
+    items = await fetchFacilitiesForMain(supabase);
+  } catch (e) {
+    console.error("메인페이지 부대시설 목록 조회 실패:", e);
+    return (
+      <div className="w-full py-16 text-center text-gray-500">
+        부대시설 정보를 불러오지 못했습니다.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-      <CarouselSection title="부대시설 안내" items={facilities} />
+      <CarouselSection title="부대시설 안내" items={items} />
     </div>
   );
 }
