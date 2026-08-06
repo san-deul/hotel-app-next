@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useHeaderStore } from "@/lib/store/headerStore";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -18,6 +18,7 @@ const MAIN_NAV = [
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Header 상태 (모바일, 스크롤)
 
@@ -33,6 +34,20 @@ export default function Header() {
   const logout = useAuthStore((state) => state.logout);
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
+
+  // 로그아웃 핸들러
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("로그아웃되었습니다.");
+      setOpen(false);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패", error);
+      toast.error("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
 
   // 스크롤 감지
   useEffect(() => {
@@ -95,7 +110,7 @@ export default function Header() {
   const rightNavItems: NavItem[] = user
     ? [
       { type: "link", label: "마이페이지", to: "/mypage" },
-      { type: "button", label: "로그아웃", onClick: logout },
+      { type: "button", label: "로그아웃", onClick: handleLogout  },
       {
         type: "link",
         label: "관리자",
@@ -159,16 +174,7 @@ export default function Header() {
                   <button
                     key={item.label}
                     className="hover:text-[#9c836a]"
-                    onClick={async () => {
-                      try {
-                        await item.onClick();
-                        toast.success("로그아웃되었습니다.");
-                        setOpen(false);
-                      } catch (error) {
-                        console.error('로그아웃 실패', error)
-                        toast.error("로그아웃에 실패했습니다. 다시 시도해주세요.");
-                      }
-                    }}
+                    onClick={item.onClick}
                   >
                     {item.label}
                   </button>
@@ -245,16 +251,7 @@ export default function Header() {
                 <button
                   key={item.label}
                   className="text-left text-gray-700"
-                  onClick={async () => {
-                    try {
-                      await item.onClick();
-                      toast.success("로그아웃되었습니다.");
-                      setOpen(false);
-                    } catch (error) {
-                      console.error('로그아웃 실패', error)
-                      toast.error("로그아웃에 실패했습니다. 다시 시도해주세요.");
-                    }
-                  }}
+                  onClick={item.onClick}
                 >
                   {item.label}
                 </button>
