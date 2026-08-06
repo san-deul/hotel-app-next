@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/lib/store/authStore";
 import { loginSchema } from "@/lib/schemas/loginSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { isAdminRole } from "@/lib/constants/role";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 
 type LoginFormValues = {
@@ -24,7 +24,7 @@ export default function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: yupResolver(loginSchema),
   });
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
