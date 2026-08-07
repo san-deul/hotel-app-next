@@ -1,5 +1,5 @@
 import CarouselSection from "@/components/common/CarouselSection";
-import { fetchRoomsForMain, MainRoomCarouselItem } from "@/lib/api/roomApi";
+import { fetchRoomsForMain, MainRoomCarouselItem } from "@/lib/api/room";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MainRooms() {

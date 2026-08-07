@@ -19,7 +19,14 @@ export default function Error({
       </p>
 
       <div className="flex gap-3 mt-2">
-        
+
+        <button
+          onClick={() => reset()}
+          className="border border-[#3c2c2c] text-[#3c2c2c] px-5 py-2 rounded-lg text-sm"
+        >
+          다시 시도
+        </button>
+
         <Link
           href="/"
           className="bg-[#3c2c2c] text-white px-5 py-2 rounded-lg text-sm"

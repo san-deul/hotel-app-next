@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchRoomById, fetchRooms, RoomRow } from "@/lib/api/roomApi";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();

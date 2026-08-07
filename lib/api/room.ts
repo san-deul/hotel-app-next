@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getRoomImageUrl } from "@/lib/utils/image";
+import { cache } from "react";
 
 export interface RoomImage {
   room_img_no: string | number;
@@ -8,8 +10,8 @@ export interface RoomImage {
 }
 
 export interface RoomRow {
-  parent_no: string;
-  room_no: string | number;
+  room_no: number;
+  parent_no: string | null;
   room_name: string;
   depth: number;
   info?: string;
@@ -26,27 +28,37 @@ export interface MainRoomCarouselItem {
   image: string;
 }
 
-export const getRoomImageUrl = (supabase: SupabaseClient, path?: string) => {
-  if (!path) return "/images/no-image.jpg";
+export interface RoomNavItem {
+  room_no: number;
+  parent_no: string | null;
+  room_name: string;
+  depth: number;
+}
 
-  const { data } = supabase.storage.from("room_images").getPublicUrl(path);
 
-  return data.publicUrl;
-};
-
-export const fetchRooms = async (
-  supabase: SupabaseClient
-): Promise<RoomRow[]> => {
+export const fetchRooms = cache (async (supabase: SupabaseClient): Promise<RoomRow[]> => {
   const { data, error } = await supabase
     .from("room")
-    .select(`*,room_img(*)`)
+    .select(`*, room_img(*)`)
     .order("room_no", { ascending: true });
 
   if (error) throw error;
   return data as RoomRow[];
-};
+});
 
-export const fetchRoomById = async (
+export const fetchRoomNavList = cache(
+  async (supabase: SupabaseClient): Promise<RoomNavItem[]> => {
+    const { data, error } = await supabase
+      .from("room")
+      .select("room_no, parent_no, room_name, depth") // 이미지/설명 등 제외
+      .order("room_no", { ascending: true });
+
+    if (error) throw error;
+    return data as RoomNavItem[];
+  }
+);
+
+export const fetchRoomById = cache(async (
   supabase: SupabaseClient,
   roomNo: string
 ): Promise<RoomRow | null> => {
@@ -58,7 +70,7 @@ export const fetchRoomById = async (
 
   if (error) throw error;
   return data as RoomRow | null;
-};
+});
 
 /* 메인 페이지용 */
 export const fetchRoomsForMain = async (
@@ -77,7 +89,7 @@ export const fetchRoomsForMain = async (
     return {
       id: room.room_no,
       title: room.room_name,
-      image: getRoomImageUrl(supabase, mainImagePath),
+      image: getRoomImageUrl(mainImagePath),
     };
   });
 };

@@ -1,23 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useFavorite } from "@/hooks/useFavorite";
-import { useRoom, useRooms } from "@/hooks/useRooms";
-import { getRoomImageUrl } from "@/lib/api/roomApi";
+import { getRoomImageUrl } from "@/lib/utils/image";
+import type { RoomRow } from "@/lib/api/room";
 
+interface RoomDetailContentProps {
+  room: RoomRow;
+}
 
-export default function RoomDetailContent({ id }: { id: string }) {
-
+export default function RoomDetailContent({ room }: RoomDetailContentProps) {
   const router = useRouter();
-  const roomNo = Number(id);
+  const roomNo = Number(room.room_no);
 
-  const { data: room, isLoading, error } = useRoom(id);
   const [mainIndex, setMainIndex] = useState(0);
-
-  const images = room?.room_img ?? [];
+  const images = room.room_img ?? [];
 
   const {
     isFavorite,
@@ -25,22 +24,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
     toggleFavorite,
     isToggling,
   } = useFavorite(roomNo);
-
-  if (error)
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-xl text-red-500">
-          {error instanceof Error ? error.message : "객실을 불러오지 못했습니다."}
-        </div>
-      </div>
-    );
-
-  if (isLoading || !room)
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-xl text-gray-500">Loading...</div>
-      </div>
-    );
 
   const showPrev = () => {
     setMainIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -52,10 +35,8 @@ export default function RoomDetailContent({ id }: { id: string }) {
 
   return (
     <>
-      {/* 제목 */}
       <h1 className="text-3xl font-serif mb-6">{room.room_name}</h1>
 
-      {/* 메인 이미지 + 좌우 화살표 */}
       <div className="relative w-full h-[450px]">
         <img
           src={getRoomImageUrl(images[mainIndex]?.upload_path)}
@@ -63,7 +44,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
           className="w-full h-full object-cover rounded"
         />
 
-        {/* 왼쪽 버튼 */} 
         {images.length > 1 && (
           <button
             onClick={showPrev}
@@ -73,7 +53,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
           </button>
         )}
 
-        {/* 오른쪽 버튼 */}
         {images.length > 1 && (
           <button
             onClick={showNext}
@@ -84,7 +63,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
         )}
       </div>
 
-      {/* 썸네일 */}
       {images.length > 1 && (
         <div className="flex gap-3 mt-4 overflow-x-auto">
           {images.map((img, index) => (
@@ -103,7 +81,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
         </div>
       )}
 
-      {/* 설명 */}
       <div className="mt-10">
         <h2 className="text-xl font-bold mb-4">
           {room.info || "객실 설명이 준비 중입니다."}
@@ -115,7 +92,6 @@ export default function RoomDetailContent({ id }: { id: string }) {
               <span className="font-semibold">가격:</span>{" "}
               {room.price?.toLocaleString() || "문의"}원
             </div>
-
             <div>
               <span className="font-semibold">기준 인원:</span>{" "}
               {room.guest_count || "-"}명
@@ -136,13 +112,11 @@ export default function RoomDetailContent({ id }: { id: string }) {
           <button
             onClick={() => toggleFavorite()}
             disabled={favoriteLoading || isToggling}
-            className={`px-6 py-3 rounded transition text-lg
-                ${
-                  isFavorite
-                    ? "bg-red-100 text-red-600 hover:bg-red-200"
-                    : "bg-gray-200 hover:bg-gray-300"
-                }
-              `}
+            className={`px-6 py-3 rounded transition text-lg ${
+              isFavorite
+                ? "bg-red-100 text-red-600 hover:bg-red-200"
+                : "bg-gray-200 hover:bg-gray-300"
+            }`}
           >
             {isFavorite ? "♥ 찜" : "♡ 찜"}
           </button>

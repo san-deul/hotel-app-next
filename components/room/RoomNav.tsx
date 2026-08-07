@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRooms } from "@/hooks/useRooms";
+import { RoomNavItem } from "@/lib/api/room";
 
-export default function RoomNav() {
+interface RoomNavProps {
+  rooms: RoomNavItem [];
+}
+
+export default function RoomNav({ rooms }: RoomNavProps) {
   const pathname = usePathname();
-  const { data: rooms } = useRooms();
+
+
 
   if (!rooms) return <aside className="p-6">데이터 없음</aside>;
   //console.log("rooms raw data:", rooms);
@@ -16,12 +21,14 @@ export default function RoomNav() {
 
   // 자식 : depth = 1 → parent_name 으로 그룹화
   const childrenMap = rooms.reduce((acc: Record<string, typeof rooms>, room) => {
-    if (room.depth === 1) {
+    if (room.depth === 1 && room.parent_no) {
       if (!acc[room.parent_no]) acc[room.parent_no] = [];
       acc[room.parent_no].push(room);
     }
     return acc;
   }, {});
+
+
 
   return (
     <aside
@@ -44,15 +51,14 @@ export default function RoomNav() {
 
           {/* 자식 목록 */}
           <ul className="space-y-1">
-            {childrenMap[parent.room_no]?.map((child) => (
+            {childrenMap[String(parent.room_no)]?.map((child) => (
               <li key={child.room_no}>
                 <Link
                   href={`/rooms/${child.room_no}`}
-                  className={`block px-2 py-1 rounded ${
-                    pathname.includes(String(child.room_no))
+                  className={`block px-2 py-1 rounded ${pathname.includes(String(child.room_no))
                       ? "bg-[#ede4cb] text-[#6d563b]"
                       : "text-gray-700 hover:bg-[#ede4cb]"
-                  }`}
+                    }`}
                 >
                   {child.room_name}
                 </Link>

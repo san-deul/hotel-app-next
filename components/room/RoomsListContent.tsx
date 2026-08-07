@@ -1,19 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { useRooms } from "@/hooks/useRooms";
-import { getRoomImageUrl } from "@/lib/api/roomApi";
+import type { RoomRow } from "@/lib/api/room";
+import { getRoomImageUrl } from "@/lib/utils/image";
 
+interface RoomsListContentProps {
+  rooms: RoomRow[];
+}
 
-export default function RoomsListContent() {
-
-  const { data: rooms } = useRooms();
-
-  if(!rooms) return null;
+export default function RoomsListContent({ rooms }: RoomsListContentProps) {
+  if (!rooms || rooms.length === 0) return null;
 
   const categories = rooms.filter((r) => r.depth === 0);
-  const roomItems = rooms.filter((r) => r.depth === 1);;
+  const roomItems = rooms.filter((r) => r.depth === 1);
 
   return (
     <>
@@ -31,9 +28,8 @@ export default function RoomsListContent() {
                 const imgUrl = mainImg
                   ? getRoomImageUrl(mainImg.upload_path)
                   : "/images/no-image.jpg";
-                  //console.log('imgUrl',mainImg)
 
-                  return (
+                return (
                   <div key={room.room_no}>
                     <Link href={`/rooms/${room.room_no}`}>
                       <img
