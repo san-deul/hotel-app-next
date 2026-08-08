@@ -1,8 +1,8 @@
-// app/admin/layout.tsx
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server"; // 경로 아래 참고
 import AdminShell from "./layout/AdminShell";
+import { fetchMemberById } from "@/lib/api/user";
 
 export const metadata: Metadata = {
   title: "관리자페이지 | SD HOTEL",
@@ -21,16 +21,11 @@ export default async function AdminLayout({
 
   if (!authUser) redirect("/login");
 
-  const { data: member } = await supabase
-    .from("member")
-    .select("*")
-    .eq("id", authUser.id)
-    .single();
+  const member = await fetchMemberById(supabase, authUser.id ).catch(()=>null)
 
   if (member?.role !== "admin" && member?.role !== "manager") {
     redirect("/");
   }
-
   return (
     <AdminShell user={{ ...authUser, ...member }}>{children}</AdminShell>
   );

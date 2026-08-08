@@ -36,7 +36,7 @@ export interface RoomNavItem {
 }
 
 
-export const fetchRooms = cache (async (supabase: SupabaseClient): Promise<RoomRow[]> => {
+export const fetchRooms = cache(async (supabase: SupabaseClient): Promise<RoomRow[]> => {
   const { data, error } = await supabase
     .from("room")
     .select(`*, room_img(*)`)
@@ -93,3 +93,31 @@ export const fetchRoomsForMain = async (
     };
   });
 };
+
+export const fetchAvailableRooms = cache(async (
+  supabase: SupabaseClient,
+  minGuestCount: number
+): Promise<RoomRow[]> => {
+  const { data, error } = await supabase
+    .from("room")
+    .select('*, room_img(*)')
+    .eq("depth", 1)
+    .gte("guest_count", minGuestCount);
+
+  if (error) throw error;
+  return data as RoomRow[];
+
+});
+
+
+export type RoomWithThumbnail = RoomRow & { thumbnail: string };
+
+
+export function withThumbnail(room: RoomRow): RoomWithThumbnail {
+  const mainImagePath = room.room_img?.find((img) => img.is_main)?.upload_path;
+  return {
+    ...room,
+    thumbnail: getRoomImageUrl(mainImagePath),
+  };
+}
+

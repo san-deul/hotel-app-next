@@ -1,20 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { AppUser } from "@/lib/api/user";
+import { useAuthStore } from "@/lib/store/authStore";
 
 
-export default function AdminHeader({ user }: { user: User }) {
+export default function AdminHeader({ user }: { user: AppUser }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    try {
+      await logout();
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+
+    }
   };
 
   return (
@@ -24,7 +45,7 @@ export default function AdminHeader({ user }: { user: User }) {
           <Link href="/admin">관리자페이지</Link>
         </div>
 
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((prev) => !prev)}
             className="flex items-center gap-2 px-3 py-1 border rounded-full hover:bg-gray-50 transition"

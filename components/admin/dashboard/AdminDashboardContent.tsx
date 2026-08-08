@@ -1,4 +1,3 @@
-// components/admin/dashboard/AdminDashboardContent.tsx
 import Link from "next/link";
 
 interface ReservationRow {
@@ -10,12 +9,13 @@ interface ReservationRow {
 
 interface Props {
   todayStr: string;
+  hasError: boolean;
   summary: { checkin: number; checkout: number; confirmed: number; pending: number; cancelled: number };
   checkinList: ReservationRow[];
   checkoutList: ReservationRow[];
 }
 
-export default function AdminDashboardContent({ todayStr, summary, checkinList, checkoutList }: Props) {
+export default function AdminDashboardContent({ todayStr, hasError, summary, checkinList, checkoutList }: Props) {
   const todayLabel = new Date(todayStr).toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
