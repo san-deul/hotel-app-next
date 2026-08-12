@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server"; // 경로 아래 참고
+import { createClient } from "@/lib/supabase/server"; 
 import AdminShell from "./layout/AdminShell";
 import { fetchMemberById } from "@/lib/api/user";
 

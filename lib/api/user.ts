@@ -11,8 +11,6 @@ export interface MemberRow {
 export type AppUser = User & MemberRow;
 
 
-
-
 export const fetchMemberById = async (
   supabase: SupabaseClient,
   userId: string
@@ -26,3 +24,5 @@ export const fetchMemberById = async (
   if (error) throw error;
   return data as MemberRow | null;
 };
+
+

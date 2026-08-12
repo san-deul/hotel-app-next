@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EditEmployeeForm from "@/components/admin/employee/EditEmployeeForm";
+import { fetchMemberById } from "@/lib/api/user";
+import { fetchEmployeeById } from "@/lib/actions/employee";
 
 export const metadata: Metadata = {
   title: "직원 정보 수정 | 관리자페이지",
@@ -19,23 +21,17 @@ export default async function EditEmployeePage({ params }: EditEmployeePageProps
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  const { data: caller } = await supabase
-    .from("member")
-    .select("role")
-    .eq("id", authUser!.id)
-    .single();
+  if (!authUser) redirect("/login");
 
-  if (caller?.role !== "admin") {
+  const member = await fetchMemberById(supabase, authUser.id).catch(() => null);
+
+  if (member?.role !== "admin") {
     redirect("/admin/employee");
   }
 
-  const { data: employee, error } = await supabase
-    .from("member")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const employee = await fetchEmployeeById(supabase, id);
 
-  if (error || !employee) {
+  if (!employee) {
     notFound();
   }
 

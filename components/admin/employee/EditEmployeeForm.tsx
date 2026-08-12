@@ -2,49 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { EmployeeDetail, updateEmployee } from "@/lib/actions/employee";
+import { EmployeeFormValues, employeeSchema } from "@/lib/schemas/employeeSchema";
 
-const schema = yup.object({
-  name: yup.string().required("이름을 입력해주세요."),
-  phone: yup.string().required("휴대폰 번호를 입력해주세요."),
-  birth: yup
-    .string()
-    .required("생년월일을 입력해주세요.")
-    .matches(/^[0-9]{8}$/, "생년월일은 8자리 숫자여야 합니다.")
-    .test("valid-date", "올바른 날짜가 아닙니다.", (value) => {
-      if (!value) return false;
-      const year = Number(value.slice(0, 4));
-      const month = Number(value.slice(4, 6));
-      const day = Number(value.slice(6, 8));
-      const date = new Date(`${year}-${month}-${day}`);
-      return (
-        date.getFullYear() === year &&
-        date.getMonth() + 1 === month &&
-        date.getDate() === day
-      );
-    }),
-  email: yup.string(),
-});
-
-type FormValues = {
-  name: string;
-  phone: string;
-  birth: string;
-  email?: string;
-};
-
-interface Employee {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  birth: string | null;
-}
-
-export default function EditEmployeeForm({ employee }: { employee: Employee }) {
+export default function EditEmployeeForm({ employee }: { employee: EmployeeDetail }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -57,12 +20,12 @@ export default function EditEmployeeForm({ employee }: { employee: Employee }) {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormValues>({
-    resolver: yupResolver(schema),
+  } = useForm<EmployeeFormValues>({
+    resolver: yupResolver(employeeSchema),
     defaultValues: {
       email: employee.email,
       name: employee.name,
-      phone: employee.phone,
+      phone: employee.phone ?? "",
       birth: normalizedBirth,
     },
   });
@@ -74,31 +37,19 @@ export default function EditEmployeeForm({ employee }: { employee: Employee }) {
     return `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 7)}-${onlyNums.slice(7, 11)}`;
   };
 
-  const onSubmit = async (form: FormValues) => {
+  const onSubmit = async (form: EmployeeFormValues) => {
     try {
       setLoading(true);
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("member")
-        .update({
-          name: form.name,
-          phone: form.phone,
-          birth: form.birth,
-        })
-        .eq("id", employee.id);
-
-      if (error) {
-        console.error(error);
-        alert("수정 실패!");
-        return;
-      }
-
+      await updateEmployee(employee.id, {
+        name: form.name,
+        phone: form.phone,
+        birth: form.birth,
+      });
       alert("직원 정보가 수정되었습니다!");
       router.push("/admin/employee");
     } catch (err) {
       console.error(err);
-      alert("오류가 발생했습니다.");
+      alert(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -145,7 +96,11 @@ export default function EditEmployeeForm({ employee }: { employee: Employee }) {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button type="submit" className="bg-[#696cff] text-white px-5 py-2 rounded">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#696cff] text-white px-5 py-2 rounded disabled:opacity-50"
+          >
             {loading ? "처리중..." : "수정하기"}
           </button>
           <button type="button" className="px-5 py-2 rounded border" onClick={() => router.back()}>

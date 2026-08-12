@@ -121,3 +121,183 @@ export function withThumbnail(room: RoomRow): RoomWithThumbnail {
   };
 }
 
+
+
+export async function deleteRoom(supabase: SupabaseClient, room: RoomRow) {
+  const { data: reservations, error: resError } = await supabase
+    .from("reservation")
+    .select("id")
+    .eq("room_no", room.room_no);
+  if (resError) throw resError;
+
+  if (reservations.length > 0) {
+    throw new Error("HAS_RESERVATION");
+  }
+
+  const { error: imgError } = await supabase
+    .from("room_img")
+    .delete()
+    .eq("room_no", room.room_no);
+  if (imgError) throw imgError;
+
+  const { error: detailError } = await supabase
+    .from("room_detail")
+    .delete()
+    .eq("room_no", room.room_no);
+  if (detailError) throw detailError;
+
+  const { error: roomError } = await supabase
+    .from("room")
+    .delete()
+    .eq("room_no", room.room_no);
+  if (roomError) throw roomError;
+}
+
+export async function deleteRoomGroup(supabase: SupabaseClient, room: RoomRow) {
+  await supabase.from("room_img").delete().eq("room_no", room.room_no);
+  await supabase.from("room_detail").delete().eq("room_no", room.room_no);
+
+  const { data: children } = await supabase
+    .from("room")
+    .select("room_no")
+    .eq("parent_no", room.room_no);
+
+  const childRoomNos = (children ?? []).map((c) => c.room_no);
+
+  if (childRoomNos.length > 0) {
+    const { data: reservations } = await supabase
+      .from("reservation")
+      .select("id")
+      .in("room_no", childRoomNos);
+
+    if (reservations && reservations.length > 0) {
+      throw new Error("CHILD_HAS_RESERVATION");
+    }
+  }
+
+  await supabase.from("room").delete().eq("parent_no", room.room_no);
+  await supabase.from("room").delete().eq("room_no", room.room_no);
+}
+
+
+export async function addCategory(
+  supabase: SupabaseClient,
+  { room_no, room_name }: { room_no: number; room_name: string }
+) {
+  const { error } = await supabase.from("room").insert({
+    room_no,
+    room_name,
+    depth: 0,
+    parent_no: "#",
+  });
+  if (error) throw error;
+}
+
+
+export async function addRoom(
+  supabase: SupabaseClient,
+  values: {
+    room_no: number;
+    room_name: string;
+    parent_no: string;
+    info?: string;
+    price: number;
+    guest_count: number;
+    total_room: number;
+  }
+) {
+  const { error } = await supabase.from("room").insert({
+    room_no: values.room_no,
+    room_name: values.room_name,
+    depth: 1,
+    parent_no: values.parent_no,
+    info: values.info,
+    price: values.price,
+    guest_count: values.guest_count,
+    total_room: values.total_room,
+  });
+  if (error) throw error;
+}
+
+
+export async function updateCategory(
+  supabase: SupabaseClient,
+  room_no: number,
+  values: { room_name: string }
+) {
+  const { error } = await supabase.from("room").update(values).eq("room_no", room_no);
+  if (error) throw error;
+}
+
+
+export async function updateRoom(
+  supabase: SupabaseClient,
+  room_no: number,
+  values: {
+    room_name: string;
+    info?: string;
+    price: number;
+    guest_count: number;
+    total_room: number;
+  }
+) {
+  const { error } = await supabase.from("room").update(values).eq("room_no", room_no);
+  if (error) throw error;
+}
+
+export async function fetchRoomImages(
+  supabase: SupabaseClient,
+  room_no: number
+): Promise<RoomImage[]> {
+  const { data, error } = await supabase
+    .from("room_img")
+    .select("*")
+    .eq("room_no", room_no)
+    .order("is_main", { ascending: false });
+  if (error) throw error;
+  return data as RoomImage[];
+}
+
+export async function uploadRoomImage(
+  supabase: SupabaseClient,
+  room_no: number,
+  file: File
+) {
+  const filePath = `${room_no}/${Date.now()}-${file.name}`;
+
+  const { error: storageError } = await supabase.storage
+    .from("room_images")
+    .upload(filePath, file);
+  if (storageError) throw new Error("STORAGE_UPLOAD_FAILED");
+
+  const { error: dbError } = await supabase.from("room_img").insert({
+    room_no,
+    room_img_name: file.name,
+    filesystem_name: filePath,
+    upload_path: filePath,
+  });
+  if (dbError) throw new Error("DB_INSERT_FAILED");
+}
+
+export async function deleteRoomImage(supabase: SupabaseClient, img: RoomImage) {
+  await supabase.storage.from("room_images").remove([img.upload_path]);
+  const { error } = await supabase
+    .from("room_img")
+    .delete()
+    .eq("room_img_no", img.room_img_no);
+  if (error) throw error;
+}
+
+export async function setMainRoomImage(
+  supabase: SupabaseClient,
+  room_no: number,
+  room_img_no: RoomImage["room_img_no"]
+) {
+  await supabase.from("room_img").update({ is_main: false }).eq("room_no", room_no);
+
+  const { error } = await supabase
+    .from("room_img")
+    .update({ is_main: true })
+    .eq("room_img_no", room_img_no);
+  if (error) throw new Error("SET_MAIN_FAILED");
+}

@@ -1,43 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-
-interface Employee {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  role: string;
-  created_at: string;
-}
+import type { EmployeeRow } from "@/lib/api/employee";
+import { useDeleteEmployee } from "@/hooks/useDeleteEmployee";
+import RoleBadge from "./RoleBadge";
 
 export default function EmployeeListContent({
   employees,
 }: {
-  employees: Employee[];
+  employees: EmployeeRow[];
 }) {
-  const router = useRouter();
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-
-    const res = await fetch("/api/admin/employee", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: id }),
-    });
-
-    const result = await res.json();
-
-    if (!result.success) {
-      alert("삭제 실패: " + result.message);
-      return;
-    }
-
-    alert("삭제가 완료되었습니다.");
-    router.refresh(); // 서버에서 목록 다시 fetch
-  };
+  const { handleDelete, deletingId } = useDeleteEmployee();
 
   if (employees.length === 0) {
     return (
@@ -67,11 +40,9 @@ export default function EmployeeListContent({
             <tr key={emp.id} className="border-b hover:bg-gray-50 transition">
               <td className="py-4 font-medium text-gray-800">{emp.name}</td>
               <td className="py-4 text-gray-600">{emp.email}</td>
-              <td className="py-4 text-gray-600">{emp.phone}</td>
+              <td className="py-4 text-gray-600">{emp.phone ?? "-"}</td>
               <td className="py-4">
-                <span className="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-semibold">
-                  {emp.role.toUpperCase()}
-                </span>
+                <RoleBadge role={emp.role} />
               </td>
               <td className="py-4 text-gray-500 text-sm">
                 {new Date(emp.created_at).toLocaleDateString()}
@@ -79,14 +50,15 @@ export default function EmployeeListContent({
               <td className="py-4 text-center">
                 <div className="flex justify-center gap-3">
                   <button
-                    className="text-red-500 hover:underline text-sm"
+                    className="text-red-500 hover:underline text-sm disabled:opacity-50"
                     onClick={() => handleDelete(emp.id)}
+                    disabled={deletingId === emp.id}
                   >
-                    삭제
+                    {deletingId === emp.id ? "삭제 중..." : "삭제"}
                   </button>
                   <Link
                     href={`/admin/employee/edit/${emp.id}`}
-                    className="text-red-500 hover:underline text-sm"
+                    className="text-blue-500 hover:underline text-sm"
                   >
                     수정
                   </Link>
