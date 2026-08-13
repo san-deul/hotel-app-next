@@ -42,6 +42,36 @@ export async function fetchReservations(
   return data as ReservationRow[];
 }
 
+export interface CreateReservationInput {
+  user_id: string;
+  room_no: number;
+  start_date: string;
+  end_date: string;
+  adult: number;
+  child: number;
+  total_price: number;
+  payment_method: string;
+  guest_name: string;
+  guest_phone: string;
+  guest_email: string;
+}
+
+export async function createReservation(
+  supabase: SupabaseClient,
+  values: CreateReservationInput
+) {
+  const order_no = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  const { data, error } = await supabase
+    .from("reservation")
+    .insert({ ...values, order_no, status: "pending" })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 
 export interface RoomCalendarInfo {
   room_name: string;
@@ -145,4 +175,92 @@ export async function fetchReservationCalendar(
   const events = buildCalendarEvents(occupancy);
 
   return { events, occupancy };
+}
+
+//
+
+export interface MyReservationRoom {
+  room_no: number;
+  room_name: string;
+  price: number | null;
+  room_img: { upload_path: string }[] | null;
+}
+
+export interface MyReservationRow {
+  id: number;
+  start_date: string;
+  end_date: string;
+  status: ReservationStatus;
+  total_price: number;
+  order_no: string | null;
+  room: MyReservationRoom | null;
+}
+
+export async function fetchMyReservations(
+  supabase: SupabaseClient,
+  userId: string,
+  from: string,
+  to: string
+): Promise<MyReservationRow[]> {
+  const { data, error } = await supabase
+    .from("reservation")
+    .select(`
+      id,
+      start_date,
+      end_date,
+      status,
+      total_price,
+      order_no,
+      room:room_no (
+        room_no,
+        room_name,
+        price,
+        room_img(upload_path)
+      )
+    `)
+    .eq("user_id", userId)
+    .gte("start_date", from)
+    .lte("end_date", to)
+    .order("start_date", { ascending: false });
+
+  if (error) throw error;
+  return data as unknown as MyReservationRow[];
+}
+
+export interface ReservationGroup {
+  start_date: string;
+  end_date: string;
+  total_price: number;
+  items: MyReservationRow[];
+}
+
+// 순수 함수 — SalesPage 때 뽑은 buildSalesSummary와 동일한 패턴
+export function buildReservationGroups(
+  reservations: MyReservationRow[]
+): ReservationGroup[] {
+  const grouped = reservations.reduce<Record<string, ReservationGroup>>((acc, r) => {
+    const key = `${r.start_date}_${r.end_date}`;
+    if (!acc[key]) {
+      acc[key] = { start_date: r.start_date, end_date: r.end_date, total_price: 0, items: [] };
+    }
+    acc[key].items.push(r);
+    acc[key].total_price += r.total_price;
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}
+
+export async function cancelMyReservations(
+  supabase: SupabaseClient,
+  userId: string,
+  ids: number[]
+) {
+  const { error } = await supabase
+    .from("reservation")
+    .update({ status: "cancelled" })
+    .in("id", ids)
+    .eq("user_id", userId);
+
+  if (error) throw error;
 }

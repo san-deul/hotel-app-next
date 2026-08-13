@@ -1,6 +1,8 @@
 import MainFacilities from "@/components/main/MainFacilities";
 import MainRooms from "@/components/main/MainRooms";
 import MainVisual from "@/components/main/MainVisual";
+import MainMap from "@/components/map/MapLoader";
+import { HOTELS } from "@/components/map/data/hotel";
 import ReservationBar from "@/components/reservation/ReserveationBar";
 import { Metadata } from "next";
 
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 
+
+
 export default function Home() {
   return (
     <div className="w-full">
@@ -18,12 +22,15 @@ export default function Home() {
 
       <div className="w-full">
         <div className="max-w-5xl mx-auto px-4 my-34">
-          <ReservationBar /> 
+          <ReservationBar />
         </div>
       </div>
+      <div className="max-w-5xl mx-auto px-4 my-34">
+        <MainMap hotels={HOTELS} />
+      </div>
 
-       <MainRooms />
-       <MainFacilities />
+      <MainRooms />
+      <MainFacilities />
     </div>
   );
 }

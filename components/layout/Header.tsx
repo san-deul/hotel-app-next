@@ -120,7 +120,7 @@ export default function Header() {
       {
         type: "link",
         label: "예약확인",
-        to: "/myReservation",
+        to: "/mypage/reservations",
         show: () => user.role === "user",
       },
     ]
