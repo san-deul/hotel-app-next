@@ -128,7 +128,16 @@ export default function MyReservationContent({
                 <DateRange
                   locale={ko}
                   ranges={range}
-                  onChange={(item) => setRange([item.selection])}
+                  onChange={(item) => {
+                    const selection = item.selection;
+                    setRange([
+                      {
+                        startDate: selection.startDate ?? new Date(),
+                        endDate: selection.endDate ?? new Date(),
+                        key: selection.key ?? "selection",
+                      },
+                    ]);
+                  }}
                   months={1}
                   direction="horizontal"
                 />
@@ -180,7 +189,16 @@ export default function MyReservationContent({
             <DateRange
               locale={ko}
               ranges={range}
-              onChange={(item) => setRange([item.selection])}
+              onChange={(item) => {
+                const selection = item.selection;
+                setRange([
+                  {
+                    startDate: selection.startDate ?? new Date(),
+                    endDate: selection.endDate ?? new Date(),
+                    key: selection.key ?? "selection",
+                  },
+                ]);
+              }}
               months={1}
               direction="vertical"
               minDate={new Date()}

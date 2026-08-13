@@ -23,7 +23,7 @@ export default function AdminRoomPageContent({ initialRooms }: AdminRoomPageCont
       <div className="flex gap-6">
         <div className="w-1/3 bg-white p-4 shadow rounded">
           <h2 className="text-xl font-bold mb-3">객실 목록</h2>
-          <RoomTree data={rooms} onRoomSelect={(room) => setSelectedRoom(room)} />
+          <RoomTree data={rooms ?? []} onRoomSelect={(room) => setSelectedRoom(room)} />
         </div>
 
         <div className="flex-1 bg-white p-6 shadow rounded">

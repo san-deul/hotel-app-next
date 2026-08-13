@@ -40,7 +40,7 @@ export default function RoomSearchList({ rooms, start, end, adult, child }: Room
           {/* 왼쪽: 이미지 + 텍스트 */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div className="relative w-full sm:w-56 ... h-48 sm:h-36 ... rounded-md overflow-hidden">
-              <Image src={room.thumbnail} fill className="object-cover" sizes="..." />
+              <Image src={room.thumbnail} fill className="object-cover" sizes="..." alt="객실이미지" />
             </div>
 
             <div className="flex flex-col justify-between">

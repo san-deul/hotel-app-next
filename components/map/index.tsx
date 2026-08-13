@@ -11,7 +11,7 @@ interface MainMapProps {
 
 export default function MainMap({ hotels }: MainMapProps) {
   return (
-    <NavermapsProvider ncpKeyId={process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID} submodules={["gl"]}>
+    <NavermapsProvider ncpKeyId={process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID as string} submodules={["gl"]}>
       <Suspense fallback={<div>지도를 불러오는 중...</div>}>
         <MainMapCore hotels={hotels} />
       </Suspense>

@@ -6,6 +6,8 @@ export interface MemberRow {
   id: string;
   role?: string;
   name?: string;
+  phone?: string;
+  email?: string;
   [key: string]: unknown;
 }
 export type AppUser = User & MemberRow;
@@ -17,7 +19,7 @@ export const fetchMemberById = async (
 ): Promise<MemberRow | null> => {
   const { data, error } = await supabase
     .from("member")
-    .select("id, role, name")
+    .select("id, role, name, phone, email")
     .eq("id", userId)
     .single();
 

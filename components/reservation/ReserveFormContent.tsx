@@ -11,6 +11,7 @@ import CardInfoSection from "./CardInfoSection";
 import ReservationSummary from "./ReservationSummary";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { createReservation } from "@/lib/api/reservation";
 
 interface SearchInfo {
   start: string;

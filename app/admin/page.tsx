@@ -28,6 +28,12 @@ export default async function AdminDashboardPage() {
     );
   }
 
+  const formatList = (list: typeof checkinList.data) =>
+    (list ?? []).map((item) => ({
+      ...item,
+      room: Array.isArray(item.room) ? item.room[0] : item.room,
+    }));
+
   return (
 
     <AdminDashboardContent
@@ -40,8 +46,8 @@ export default async function AdminDashboardPage() {
         pending: pending.count ?? 0,
         cancelled: cancelled.count ?? 0,
       }}
-      checkinList={checkinList.data ?? []}
-      checkoutList={checkoutList.data ?? []}
+      checkinList={formatList(checkinList.data)}
+      checkoutList={formatList(checkoutList.data)}
     />
   );
 }

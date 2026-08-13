@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type RangeType = "today" | "week" | "month"|"custom";
 export interface RoomJoin {
   room_name: string;
   [key: string]: unknown;

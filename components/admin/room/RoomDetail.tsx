@@ -47,7 +47,7 @@ export default function RoomDetail({ room }: RoomDetailProps) {
   const deleteMutation = useDeleteRoomImage(room.room_no);
   const setMainMutation = useSetMainRoomImage(room.room_no);
 
-  const onSubmit = (values: RoomFormValues) => {
+  const onSubmit = (values: RoomEditFormValues) => {
     updateMutation.mutate(values, {
       onSuccess: () => alert("수정완료!"),
       onError: (err) => alert("수정 중 오류: " + err.message),

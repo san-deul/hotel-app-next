@@ -27,7 +27,7 @@ export default function ReservationCalendarContent({
 
   const dayCellClassNames = (arg: DayCellContentArg) => {
     const date = dayjs(arg.date).format("YYYY-MM-DD");
-    const daily = data.occupancy[date];
+    const daily = data?.occupancy[date];
     if (!daily) return "";
 
     const isFull = Object.values(daily).some((info) => info.count >= info.total);
@@ -48,7 +48,7 @@ export default function ReservationCalendarContent({
           initialView="dayGridMonth"
           height="auto"
           locale="ko"
-          events={data.events}
+          events={data?.events ?? []}
           headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
           dayCellClassNames={dayCellClassNames}
           eventClick={(info: EventClickArg) => {
