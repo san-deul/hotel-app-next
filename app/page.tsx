@@ -30,7 +30,7 @@ export default function Home() {
       </div>
 
       <MainRooms />
-      <MainFacilities />
+      {/* <MainFacilities /> */} 
     </div>
   );
 }
